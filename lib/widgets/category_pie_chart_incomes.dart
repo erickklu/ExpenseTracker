@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../models/expense.dart';
+import '../models/income.dart';
 
-class CategoryPieChart extends StatelessWidget {
-  final List<Expense> expenses;
+class CategoryPieChartIncomes extends StatelessWidget {
+  final List<Income> incomes;
 
-  CategoryPieChart({required this.expenses});
+  CategoryPieChartIncomes({required this.incomes});
 
   @override
   Widget build(BuildContext context) {
     Map<String, double> categoryTotals = {};
 
     // Calcular el total por categoría
-    for (var expense in expenses) {
-      categoryTotals[expense.category] =
-          (categoryTotals[expense.category] ?? 0) + expense.amount;
+    for (var income in incomes) {
+      categoryTotals[income.category] =
+          (categoryTotals[income.category] ?? 0) + income.amount;
     }
 
     // Convertir los datos a un formato que fl_chart pueda usar
@@ -38,16 +38,15 @@ class CategoryPieChart extends StatelessWidget {
     );
   }
 
-  // Asignar colores a las categorías
   Color _getCategoryColor(String category) {
     switch (category) {
-      case 'Food':
+      case 'Salary':
         return Colors.blue;
-      case 'Transport':
+      case 'Freelance':
         return Colors.green;
-      case 'Entertainment':
+      case 'Investments':
         return Colors.orange;
-      case 'Bills':
+      case 'Gifts':
         return Colors.red;
       case 'Others':
         return Colors.purple;

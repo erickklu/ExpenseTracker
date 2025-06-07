@@ -119,6 +119,30 @@ class DatabaseHelper {
     });
   }
 
+  // Get incomes monthly
+  Future<List<Income>> getIncomesMonthly() async {
+    final db = await database;
+
+    // Obtén la fecha actual
+    final now = DateTime.now();
+    final year = now.year.toString();
+    final month = now.month
+        .toString()
+        .padLeft(2, '0'); // Asegura que el mes tenga dos dígitos
+
+    // Consulta para obtener los ingresos del mes y año actuales
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    SELECT *
+    FROM incomes
+    WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
+  ''', [year, month]);
+
+    // Convierte los resultados en una lista de objetos Income
+    return List.generate(maps.length, (i) {
+      return Income.fromMap(maps[i]);
+    });
+  }
+
   Future<Map<String, List<Expense>>> getMonthlyExpensesByCategory(
       int year, int month) async {
     final db = await database;
@@ -265,6 +289,21 @@ class DatabaseHelper {
     final result = await db.rawQuery('''
     SELECT SUM(amount) as total
     FROM expenses
+    WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
+  ''', [year.toString(), month.toString().padLeft(2, '0')]);
+
+    // Asegúrate de manejar el caso donde el resultado sea null
+    if (result.isNotEmpty && result.first['total'] != null) {
+      return (result.first['total'] as num).toDouble();
+    }
+    return 0.0; // Si no hay resultados, devuelve 0.0
+  }
+
+  Future<double> getMonthlyTotalIncome(int year, int month) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+    SELECT SUM(amount) as total
+    FROM incomes
     WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
   ''', [year.toString(), month.toString().padLeft(2, '0')]);
 

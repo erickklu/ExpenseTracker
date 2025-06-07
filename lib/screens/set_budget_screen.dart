@@ -23,10 +23,32 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Establecer Presupuesto'),
-        backgroundColor: Color.fromARGB(255, 0, 0, 0),
-        titleTextStyle: TextStyle(
-            color: const Color.fromARGB(255, 241, 241, 241), fontSize: 20),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          'Establecer Presupuesto',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true, // Centra el título
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.blue[600]),
+            onPressed: _saveBudget, // Llama al método para guardar
+          ),
+        ],
+        iconTheme: IconThemeData(
+          color: Colors.black, // Cambia el color del ícono de retorno
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,20 +56,35 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Presupuesto Mensual'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || double.tryParse(value) == null) {
-                    return 'Por favor ingrese un monto válido';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _budget = double.parse(value!);
-                },
+              // Card para el presupuesto
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Presupuesto Mensual',
+                      border: InputBorder.none,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || double.tryParse(value) == null) {
+                        return 'Por favor ingrese un monto válido';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _budget = double.parse(value!);
+                    },
+                  ),
+                ),
               ),
-              SizedBox(height: 16),
+              /* SizedBox(height: 16), */
+
+              /*
               ElevatedButton(
                 onPressed: _saveBudget,
                 child: Text('Guardar Presupuesto'),
@@ -55,7 +92,7 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
                   primary: Color.fromARGB(255, 0, 0, 0),
                   onPrimary: Color.fromARGB(255, 241, 241, 241),
                 ),
-              ),
+              ), */
             ],
           ),
         ),

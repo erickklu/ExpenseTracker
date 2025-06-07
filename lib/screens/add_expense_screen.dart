@@ -82,10 +82,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.expense == null ? 'Agregar Gasto' : 'Editar Gasto'),
-        backgroundColor: Color.fromARGB(255, 0, 0, 0),
-        titleTextStyle: TextStyle(
-            color: const Color.fromARGB(255, 241, 241, 241), fontSize: 20),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          widget.expense == null ? 'Agregar Gasto' : 'Editar Gasto',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.blue[600]), // Ícono moderno
+            onPressed: _saveExpense, // Llama al método para guardar
+          ),
+        ],
+        iconTheme: IconThemeData(
+          color: Colors.black,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,89 +115,148 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                initialValue: _title,
-                decoration: InputDecoration(labelText: 'Titulo'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un título';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _title = value!;
-                },
-              ),
-              TextFormField(
-                initialValue: _amount.toString(),
-                decoration: InputDecoration(labelText: 'Monto'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || double.tryParse(value) == null) {
-                    return 'Por favor ingrese un monto válido';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _amount = double.parse(value!);
-                },
-              ),
-              // Dropdowns para categoría y propietario
-              DropdownButtonFormField(
-                value: _selectedCategory,
-                decoration: InputDecoration(labelText: 'Categoría'),
-                items: [
-                  'General',
-                  'Food',
-                  'Transport',
-                  'Entertainment',
-                  'Bills',
-                  'Others'
-                ]
-                    .map((category) => DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value as String;
-                  });
-                },
-              ),
-              DropdownButtonFormField(
-                value: _selectedOwner,
-                decoration: InputDecoration(labelText: 'Propietario'),
-                items: ['Person 1', 'Person 2']
-                    .map((owner) => DropdownMenuItem(
-                          value: owner,
-                          child: Text(owner),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedOwner = value as String;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Text('Fecha: ${_selectedDate.toLocal()}'.split(' ')[0]),
-                  TextButton(
-                    onPressed: _pickDate,
-                    child: Text('Seleccionar Fecha'),
+              // Card para el título
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextFormField(
+                    initialValue: _title,
+                    decoration: InputDecoration(
+                      labelText: 'Título',
+                      border: InputBorder.none,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingrese un título';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _title = value!;
+                    },
                   ),
-                ],
+                ),
               ),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveExpense,
-                child: Text(
-                    widget.expense == null ? 'Guardar Gasto' : 'Editar Gasto'),
-                style: ElevatedButton.styleFrom(
-                  primary: Color.fromARGB(255, 0, 0, 0),
-                  onPrimary: Color.fromARGB(255, 241, 241, 241),
+
+              // Card para el monto
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextFormField(
+                    initialValue: _amount.toString(),
+                    decoration: InputDecoration(
+                      labelText: 'Monto',
+                      border: InputBorder.none,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || double.tryParse(value) == null) {
+                        return 'Por favor ingrese un monto válido';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _amount = double.parse(value!);
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Card para la categoría
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: DropdownButtonFormField(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: 'Categoría',
+                      border: InputBorder.none,
+                    ),
+                    items: [
+                      'General',
+                      'Food',
+                      'Transport',
+                      'Entertainment',
+                      'Bills',
+                      'Others'
+                    ]
+                        .map((category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value as String;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Card para el propietario
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: DropdownButtonFormField(
+                    value: _selectedOwner,
+                    decoration: InputDecoration(
+                      labelText: 'Propietario',
+                      border: InputBorder.none,
+                    ),
+                    items: ['Person 1', 'Person 2']
+                        .map((owner) => DropdownMenuItem(
+                              value: owner,
+                              child: Text(owner),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedOwner = value as String;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Card para la fecha
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Fecha: ${_selectedDate.toLocal()}'.split(' ')[0]),
+                      TextButton(
+                        onPressed: _pickDate,
+                        child: Text('Seleccionar Fecha'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

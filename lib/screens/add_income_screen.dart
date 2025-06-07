@@ -23,13 +23,11 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   void initState() {
     super.initState();
     if (widget.income != null) {
-      // Si estamos editando, prellenar los campos
       _title = widget.income!.title;
       _amount = widget.income!.amount;
       _selectedDate = DateTime.parse(widget.income!.date);
       _selectedCategory = widget.income!.category;
     } else {
-      // Valores por defecto para agregar un nuevo ingreso
       _title = '';
       _amount = 0.0;
       _selectedDate = DateTime.now();
@@ -41,7 +39,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       Income newIncome = Income(
-        id: widget.income?.id, // Usar el ID existente si estamos editando
+        id: widget.income?.id,
         title: _title,
         amount: _amount,
         date: _selectedDate.toIso8601String(),
@@ -78,11 +76,32 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.income == null ? 'Agregar Ingreso' : 'Editar Ingreso'),
-        backgroundColor: Color.fromARGB(255, 0, 0, 0),
-        titleTextStyle: TextStyle(
-            color: const Color.fromARGB(255, 241, 241, 241), fontSize: 20),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          widget.income == null ? 'Agregar Ingreso' : 'Editar Ingreso',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true, // Centra el título
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.check, color: Colors.blue[600]),
+            onPressed: _saveIncome, // Llama al método para guardar
+          ),
+        ],
+        iconTheme: IconThemeData(
+          color: Colors.black,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -90,75 +109,118 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                initialValue: _title,
-                decoration: InputDecoration(labelText: 'Título'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un título';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _title = value!;
-                },
-              ),
-              TextFormField(
-                initialValue: _amount.toString(),
-                decoration: InputDecoration(labelText: 'Monto'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || double.tryParse(value) == null) {
-                    return 'Por favor ingrese un monto válido';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _amount = double.parse(value!);
-                },
-              ),
-              // Dropdown para categoría
-              DropdownButtonFormField(
-                value: _selectedCategory,
-                decoration: InputDecoration(labelText: 'Categoría'),
-                items: [
-                  'General',
-                  'Salary',
-                  'Freelance',
-                  'Investments',
-                  'Gifts',
-                  'Others'
-                ]
-                    .map((category) => DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value as String;
-                  });
-                },
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Text('Fecha: ${_selectedDate.toLocal()}'.split(' ')[0]),
-                  TextButton(
-                    onPressed: _pickDate,
-                    child: Text('Seleccionar Fecha'),
+              // Card para el título
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextFormField(
+                    initialValue: _title,
+                    decoration: InputDecoration(
+                      labelText: 'Título',
+                      border: InputBorder.none,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingrese un título';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _title = value!;
+                    },
                   ),
-                ],
+                ),
               ),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveIncome,
-                child: Text(widget.income == null
-                    ? 'Guardar Ingreso'
-                    : 'Editar Ingreso'),
-                style: ElevatedButton.styleFrom(
-                  primary: Color.fromARGB(255, 0, 0, 0),
-                  onPrimary: Color.fromARGB(255, 241, 241, 241),
+
+              // Card para el monto
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextFormField(
+                    initialValue: _amount.toString(),
+                    decoration: InputDecoration(
+                      labelText: 'Monto',
+                      border: InputBorder.none,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || double.tryParse(value) == null) {
+                        return 'Por favor ingrese un monto válido';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _amount = double.parse(value!);
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Card para la categoría
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: DropdownButtonFormField(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: 'Categoría',
+                      border: InputBorder.none,
+                    ),
+                    items: [
+                      'General',
+                      'Salary',
+                      'Freelance',
+                      'Investments',
+                      'Gifts',
+                      'Others'
+                    ]
+                        .map((category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value as String;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Card para la fecha
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Fecha: ${_selectedDate.toLocal()}'.split(' ')[0]),
+                      TextButton(
+                        onPressed: _pickDate,
+                        child: Text('Seleccionar Fecha'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

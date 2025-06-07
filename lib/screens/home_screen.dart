@@ -6,6 +6,7 @@ import '../models/expense.dart';
 import '../models/income.dart';
 import '../screens/add_income_screen.dart';
 import '../widgets/category_pie_chart.dart';
+import '../widgets/category_pie_chart_incomes.dart';
 import '../widgets/monthly_bar_chart.dart';
 import 'set_budget_screen.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,8 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Expense> _expenses = [];
   List<Income> _incomes = [];
   List<Expense> _monthlyExpenses = [];
+  List<Income> _monthlyIncomes = [];
 
   double _monthlyTotalExpense = 0.0;
+  double _monthlyTotalIncome = 0.0;
   double _budget = 0.0;
   Map<String, double> _monthlyTotalsExpenses = {};
   Map<String, double> _totalsByOwner = {};
@@ -36,8 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadExpenses();
     _loadExpensesMonthly();
+    _loadIncomesMonthly();
     _loadIncomes();
     _loadMonthlyTotalExpense();
+    _loadMonthlyTotalIncome();
     _loadBudget();
     _loadMonthlyTotalsExpenses();
     _loadTotalsByOwner();
@@ -101,6 +106,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadMonthlyTotalIncome() async {
+    final now = DateTime.now();
+    final total =
+        await DatabaseHelper().getMonthlyTotalIncome(now.year, now.month);
+    setState(() {
+      _monthlyTotalIncome = total;
+    });
+  }
+
   Future<void> _loadMonthlyTotalsExpenses() async {
     final now = DateTime.now();
     final totals = await DatabaseHelper().getMonthlyTotalsExpenses(now.year);
@@ -120,6 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final expensesMonth = await DatabaseHelper().getExpensesMonthly();
     setState(() {
       _monthlyExpenses = expensesMonth;
+    });
+  }
+
+  Future<void> _loadIncomesMonthly() async {
+    final incomesMonth = await DatabaseHelper().getIncomesMonthly();
+    setState(() {
+      _monthlyIncomes = incomesMonth;
     });
   }
 
@@ -175,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Gasto Total',
+                                'Total Disponible',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
@@ -184,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                '\$ ${_monthlyTotalExpense.toStringAsFixed(2)}',
+                                '\$ ${_balance.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -218,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Presupuesto',
+                                      'Ingreso',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -227,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      '\$ ${_budget.toStringAsFixed(2)}',
+                                      '\$ ${_totalIncomes.toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -246,9 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              color: (_budget - _monthlyTotalExpense) >= 0
-                                  ? Colors.green[50]
-                                  : Colors.red[50],
+                              color: Colors.green[50],
                               elevation: 0,
                               child: Padding(
                                 padding: const EdgeInsets.all(12.0),
@@ -256,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Restante',
+                                      'Egreso',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -265,15 +284,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      '\$ ${(_budget - _monthlyTotalExpense).toStringAsFixed(2)}',
+                                      '\$ ${_totalExpenses.toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color:
-                                            (_budget - _monthlyTotalExpense) >=
-                                                    0
-                                                ? Colors.green
-                                                : Colors.red,
+                                        color: Colors.black,
                                       ),
                                     ),
                                   ],
@@ -288,39 +303,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            if (_incomes.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ingresos',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        ..._incomes.map((income) {
-                          return ListTile(
-                            title: Text(income.title),
-                            subtitle: Text(
-                                '${income.amount.toStringAsFixed(2)} - ${income.date} - ${income.category}'),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
 
             // Card para el gráfico de pastel
             if (_monthlyExpenses.isNotEmpty)
@@ -383,6 +365,68 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
+            // Card para el gráfico de pastel
+            if (_monthlyIncomes.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Encabezado de la card
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Ingresos',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Total',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '\$${_monthlyTotalIncome.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        // Gráfico de pastel
+                        SizedBox(
+                          height: 200,
+                          child:
+                              CategoryPieChartIncomes(incomes: _monthlyIncomes),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             // Card para la lista de gastos
             if (_expenses.isNotEmpty)
               Padding(
@@ -395,54 +439,154 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      children: _expenses.map((expense) {
-                        return Dismissible(
-                          key: Key(expense.id.toString()),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            color: Colors.red,
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Icon(Icons.delete, color: Colors.white),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Gastos',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          onDismissed: (direction) async {
-                            await DatabaseHelper().deleteExpense(expense.id!);
-                            setState(() {
-                              _expenses.remove(expense);
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('${expense.title} eliminado')),
-                            );
-                          },
-                          child: ListTile(
-                            title: Text(expense.title,
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black)),
-                            subtitle: Text(
-                                '${expense.amount.toStringAsFixed(2)} - ${expense.date.toLocal()} - ${expense.category} - ${expense.owner}'),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddExpenseScreen(expense: expense),
-                                ),
-                              ).then((_) {
-                                _loadExpenses(); // Recargar los datos al volver
+                          ..._expenses.map((expense) {
+                            return Dismissible(
+                              key: Key(expense.id.toString()),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Icon(Icons.delete, color: Colors.white),
+                              ),
+                              onDismissed: (direction) async {
+                                await DatabaseHelper()
+                                    .deleteExpense(expense.id!);
+                                setState(() {
+                                  _expenses.remove(expense);
+                                });
+
+                                _loadTotals();
+                                _loadExpenses();
                                 _loadExpensesMonthly();
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                                _loadMonthlyTotalExpense();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('${expense.title} eliminado')),
+                                );
+                              },
+                              child: ListTile(
+                                title: Text(expense.title,
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black)),
+                                subtitle: Text(
+                                    '${expense.amount.toStringAsFixed(2)} - ${expense.date.toLocal()} - ${expense.category} - ${expense.owner}'),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          AddExpenseScreen(expense: expense),
+                                    ),
+                                  ).then((_) {
+                                    _loadTotals();
+                                    _loadExpenses(); // Recargar los datos al volver
+                                    _loadExpensesMonthly();
+                                    _loadMonthlyTotalExpense();
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ]),
                   ),
                 ),
               ),
 
+            // Card para la lista de ingresos
+            if (_incomes.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ingresos',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          ..._incomes.map((income) {
+                            return Dismissible(
+                              key: Key(income.id.toString()),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Icon(Icons.delete, color: Colors.white),
+                              ),
+                              onDismissed: (direction) async {
+                                await DatabaseHelper().deleteIncome(income.id!);
+                                setState(() {
+                                  _incomes.remove(income);
+                                });
+
+                                _loadTotals();
+                                _loadIncomes();
+                                _loadIncomesMonthly();
+                                _loadMonthlyTotalIncome();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('${income.title} eliminado')),
+                                );
+                              },
+                              child: ListTile(
+                                title: Text(
+                                  income.title,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${income.amount.toStringAsFixed(2)} - ${income.date} - ${income.category}',
+                                ),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          AddIncomeScreen(income: income),
+                                    ),
+                                  ).then((_) {
+                                    _loadTotals();
+                                    _loadIncomes(); // Recargar los ingresos al volver
+                                    _loadIncomesMonthly();
+                                    _loadMonthlyTotalIncome();
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ]),
+                  ),
+                ),
+              ),
             // Card para el gráfico de barras
             if (_monthlyTotalsExpenses.isNotEmpty)
               Padding(
@@ -520,6 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => AddExpenseScreen()),
               ).then((_) {
+                _loadTotals();
                 _loadExpenses();
                 _loadExpensesMonthly();
                 _loadMonthlyTotalExpense();
@@ -534,7 +679,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => AddIncomeScreen()),
               ).then((_) {
+                _loadTotals();
                 _loadIncomes(); // Recargar los ingresos al volver
+                _loadIncomesMonthly();
+                _loadMonthlyTotalIncome();
               });
             },
           ),
